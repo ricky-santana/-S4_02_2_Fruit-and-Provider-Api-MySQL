@@ -1,7 +1,9 @@
 package cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.service;
 
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderAlreadyExists;
+import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderHasFruits;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderNotFound;
+import cat.itacademy.s04.t02.n02.fruit_api_MySQL.fruit.repository.IFruitRepository;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.dtos.ProviderRequestDto;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.dtos.ProviderResponseDto;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.model.Provider;
@@ -27,6 +29,9 @@ class ProviderServiceTest {
 
     @Mock
     private IProviderRepository providerRepository;
+
+    @Mock
+    private IFruitRepository fruitRepository;
 
     @InjectMocks
     private ProviderService providerService;
@@ -150,5 +155,46 @@ class ProviderServiceTest {
 
         assertThrows(ProviderAlreadyExists.class, () -> providerService.updateProvider(1L, updateDto));
         verify(providerRepository, never()).save(any(Provider.class));
+    }
+
+    @Test
+    @DisplayName("Should delete provider when id exists and has no associated fruits")
+    void shouldDeleteProviderSuccessfullyWhenNoFruitsExist() {
+        Provider existingProvider = new Provider("Frutas del Valle", "España");
+        ReflectionTestUtils.setField(existingProvider, "id", 1L);
+
+        when(providerRepository.findById(1L)).thenReturn(Optional.of(existingProvider));
+        when(fruitRepository.existsByProviderId(1L)).thenReturn(false);
+
+        providerService.deleteProvider(1L);
+
+        verify(providerRepository, times(1)).findById(1L);
+        verify(fruitRepository, times(1)).existsByProviderId(1L);
+        verify(providerRepository, times(1)).delete(existingProvider);
+    }
+
+    @Test
+    @DisplayName("Should throw ProviderNotFound when deleting non-existent provider")
+    void shouldThrowProviderNotFoundWhenDeletingNonExistentProvider() {
+        when(providerRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ProviderNotFound.class, () -> providerService.deleteProvider(99L));
+        verify(fruitRepository, never()).existsByProviderId(anyLong());
+        verify(providerRepository, never()).delete(any(Provider.class));
+    }
+
+    @Test
+    @DisplayName("Should throw ProviderHasFruits when deleting provider with associated fruits")
+    void shouldThrowProviderHasFruitsWhenDeletingProviderWithAssociatedFruits() {
+        Provider existingProvider = new Provider("Frutas del Valle", "España");
+        ReflectionTestUtils.setField(existingProvider, "id", 1L);
+
+        when(providerRepository.findById(1L)).thenReturn(Optional.of(existingProvider));
+        when(fruitRepository.existsByProviderId(1L)).thenReturn(true);
+
+        assertThrows(ProviderHasFruits.class, () -> providerService.deleteProvider(1L));
+        verify(providerRepository, times(1)).findById(1L);
+        verify(fruitRepository, times(1)).existsByProviderId(1L);
+        verify(providerRepository, never()).delete(any(Provider.class));
     }
 }

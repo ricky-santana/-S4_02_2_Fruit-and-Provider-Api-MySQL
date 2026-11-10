@@ -1,7 +1,9 @@
 package cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.service;
 
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderAlreadyExists;
+import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderHasFruits;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.common.exceptions.ProviderNotFound;
+import cat.itacademy.s04.t02.n02.fruit_api_MySQL.fruit.repository.IFruitRepository;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.dtos.ProviderRequestDto;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.dtos.ProviderResponseDto;
 import cat.itacademy.s04.t02.n02.fruit_api_MySQL.provider.model.Provider;
@@ -13,9 +15,11 @@ import java.util.List;
 @Service
 public class ProviderService {
     private final IProviderRepository providerRepository;
+    private final IFruitRepository fruitRepository;
 
-    public ProviderService(IProviderRepository providerRepository) {
+    public ProviderService(IProviderRepository providerRepository, IFruitRepository fruitRepository) {
         this.providerRepository = providerRepository;
+        this.fruitRepository = fruitRepository;
     }
 
     public ProviderResponseDto registerProvider(ProviderRequestDto requestDto){
@@ -46,7 +50,11 @@ public class ProviderService {
         return toResponseDto(findedProvider);
     }
 
-    //TODO Delete method
+    public void deleteProvider(Long id){
+        Provider providerToDelete = findeOrThrow(id);
+        hasNotFruitOrThrow(id, "Can't delete this provider.");
+        providerRepository.delete(providerToDelete);
+    }
 
     private ProviderResponseDto toResponseDto (Provider provider){
         return new ProviderResponseDto(provider.getId(), provider.getName(), provider.getCountry());
@@ -60,6 +68,12 @@ public class ProviderService {
     private void providerNameExists(String name, String message){
         if(providerRepository.existsByName(name)){
             throw new ProviderAlreadyExists(message);
+        }
+    }
+
+    private void hasNotFruitOrThrow(Long id, String message){
+        if(fruitRepository.existsByProviderId(id)){
+            throw new ProviderHasFruits(message);
         }
     }
 }
