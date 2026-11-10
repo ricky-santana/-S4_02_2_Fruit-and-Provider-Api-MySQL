@@ -28,13 +28,4 @@ class ProviderTest {
         assertEquals("Frutas del Sur", provider.getName());
         assertEquals("Portugal", provider.getCountry());
     }
-
-    @Test
-    @DisplayName("Provider should allow setting id for testing or reconstitution")
-    void shouldSetId() {
-        Provider provider = new Provider("Frutas del Valle", "España");
-        provider.setId(10L);
-
-        assertEquals(10L, provider.getId());
-    }
 }

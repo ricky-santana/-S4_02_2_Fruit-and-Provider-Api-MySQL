@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,7 @@ class ProviderServiceTest {
     void shouldRegisterProviderSuccessfully() {
         ProviderRequestDto requestDto = new ProviderRequestDto("Frutas del Valle", "España");
         Provider savedProvider = new Provider("Frutas del Valle", "España");
-        savedProvider.setId(1L);
+        ReflectionTestUtils.setField(savedProvider, "id", 1L);
 
         when(providerRepository.existsByName("Frutas del Valle")).thenReturn(false);
         when(providerRepository.save(any(Provider.class))).thenReturn(savedProvider);
@@ -65,9 +66,9 @@ class ProviderServiceTest {
     @DisplayName("Should return a list of all providers")
     void shouldReturnAllProviders() {
         Provider provider1 = new Provider("Frutas del Valle", "España");
-        provider1.setId(1L);
+        ReflectionTestUtils.setField(provider1, "id", 1L);
         Provider provider2 = new Provider("Tropical Export", "Costa Rica");
-        provider2.setId(2L);
+        ReflectionTestUtils.setField(provider2, "id", 2L);
 
         when(providerRepository.findAll()).thenReturn(List.of(provider1, provider2));
 
@@ -94,7 +95,7 @@ class ProviderServiceTest {
     @DisplayName("Should update provider when id exists and new name is available")
     void shouldUpdateProviderSuccessfully() {
         Provider existingProvider = new Provider("Frutas del Valle", "España");
-        existingProvider.setId(1L);
+        ReflectionTestUtils.setField(existingProvider, "id", 1L);
         ProviderRequestDto updateDto = new ProviderRequestDto("Frutas del Sur", "Portugal");
 
         when(providerRepository.findById(1L)).thenReturn(Optional.of(existingProvider));
@@ -113,7 +114,7 @@ class ProviderServiceTest {
     @DisplayName("Should update provider country when keeping the same name")
     void shouldUpdateProviderWhenKeepingSameName() {
         Provider existingProvider = new Provider("Frutas del Valle", "España");
-        existingProvider.setId(1L);
+        ReflectionTestUtils.setField(existingProvider, "id", 1L);
         ProviderRequestDto updateDto = new ProviderRequestDto("Frutas del Valle", "Portugal");
 
         when(providerRepository.findById(1L)).thenReturn(Optional.of(existingProvider));
@@ -141,7 +142,7 @@ class ProviderServiceTest {
     @DisplayName("Should throw ProviderAlreadyExists when updating to an already taken name")
     void shouldThrowProviderAlreadyExistsWhenUpdatingToExistingName() {
         Provider existingProvider = new Provider("Frutas del Valle", "España");
-        existingProvider.setId(1L);
+        ReflectionTestUtils.setField(existingProvider, "id", 1L);
         ProviderRequestDto updateDto = new ProviderRequestDto("Nombre Ocupado", "Portugal");
 
         when(providerRepository.findById(1L)).thenReturn(Optional.of(existingProvider));
