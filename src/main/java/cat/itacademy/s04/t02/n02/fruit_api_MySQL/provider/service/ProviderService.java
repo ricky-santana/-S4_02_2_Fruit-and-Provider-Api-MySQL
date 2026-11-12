@@ -37,6 +37,11 @@ public class ProviderService {
                 .toList();
     }
 
+    public ProviderResponseDto getProviderById(Long id){
+        Provider foundedProvider = findeOrThrow(id);
+        return toResponseDto(foundedProvider);
+    }
+
     public ProviderResponseDto updateProvider(Long id, ProviderRequestDto providerNewValues){
         Provider findedProvider = findeOrThrow(id);
 
